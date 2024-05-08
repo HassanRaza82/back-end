@@ -24,6 +24,7 @@ app.use(morgan("dev"));
 mongoose.connect('mongodb+srv://hassanrazashah82:hassan@cluster0.e32oaiy.mongodb.net/entrepreneurship?retryWrites=true&w=majority', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  useCreateIndex: true 
 });
 mongoose.connection
   .once("open", () => {

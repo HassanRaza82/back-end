@@ -1,52 +1,33 @@
+// controllers/authController.js
 const User = require('../model/app');
 
 exports.signup = async (req, res) => {
+  const { fullName, email, phone, password } = req.body;
   try {
-    const { firstName, secondName, email, phoneNumber, password, confirmPassword } = req.body;
-
-    if (password !== confirmPassword) {
-      return res.status(400).json({ msg: 'Passwords do not match' });
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already exists" });
     }
-
-    const user = new User({
-      firstName,
-      secondName,
-      email,
-      phoneNumber,
-      password,
-    });
-
-    await user.save();
-
-    res.send('User registered');
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
+    const newUser = new User({ fullName, email, phone, password });
+    await newUser.save();
+    res.status(201).json({ message: "User created successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
+
 exports.login = async (req, res) => {
+  const { email, password } = req.body;
   try {
-     const { email, password } = req.body;
-     const user = await User.findOne({ email });
-     if (!user) {
-       return res.status(400).json({ msg: 'Invalid credentials' });
-     }
-     const isMatch = await bcrypt.compare(password, user.password);
-     if (!isMatch) {
-       return res.status(400).json({ msg: 'Invalid credentials' });
-     }
-     const token = jwt.sign({ id: user._id }, 'secret', { expiresIn: '1h' });
-     res.json({
-       token,
-       user: {
-         id: user._id,
-         firstName: user.firstName,
-         secondName: user.secondName,
-         email: user.email,
-         phoneNumber: user.phoneNumber,
-       },
-     });
-  } catch (err) {
-     res.status(500).json({ error: err.message });
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (password !== user.password) {
+      return res.status(401).json({ message: "Invalid password" });
+    }
+    res.status(200).json({ message: "Logged in successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
   }
- };
+};
